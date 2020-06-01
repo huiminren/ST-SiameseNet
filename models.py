@@ -20,7 +20,9 @@ import logging
 import os
 
 
-
+'''
+Reused sequential
+'''
 def seq_lstm():
     lstm = Sequential()
     lstm.add(LSTM(200, return_sequences=True))
@@ -28,20 +30,12 @@ def seq_lstm():
     lstm.add(Dense(48,activation='relu'))
     return lstm
 
-
-# In[3]:
-
-
 def seq_representation():
     repres = Sequential()
     repres.add(Dense(64,activation='relu'))
     repres.add(Dense(32,activation='relu'))
     repres.add(Dense(8,activation='relu'))
     return repres
-
-
-# In[4]:
-
 
 def seq_profile():
     # model profile features representation nn
@@ -59,9 +53,11 @@ def seq_similarity():
     prediction.add(Dense(1,activation='sigmoid'))
     return prediction
 
-# In[6]:
 
-def build_model_best(with_speed,with_profile,with_temporal,nn_sim_flag):
+'''
+Build ST-SiameseNet and other compared models
+'''
+def build_model_best(with_speed,with_profile):
     if with_speed:
         inputs1_d1s = [Input((None,4)) for _ in range(5)] 
         inputs1_d1d = [Input((None,4)) for _ in range(5)] 
@@ -93,14 +89,6 @@ def build_model_best(with_speed,with_profile,with_temporal,nn_sim_flag):
     trip_emb_d1 = concatenate(lstm1_d1s+lstm1_d1d)
     trip_emb_d2 = concatenate(lstm1_d2s+lstm1_d2d)
 
-    if with_temporal:
-        # get temporal embeddings
-        temp_emb_d1 = seq_repres(trip_emb_d1)
-        temp_emb_d2 = seq_repres(trip_emb_d2)
-    else:
-        temp_emb_d1 = trip_emb_d1
-        temp_emb_d2 = trip_emb_d2
-
     # one day one driver has one profiel features
     if with_profile:
         # inputs 2: profile feature
@@ -108,48 +96,31 @@ def build_model_best(with_speed,with_profile,with_temporal,nn_sim_flag):
         inputs2_d2 = Input((11,)) 
         # model profile features representation nn
         seq_pro = seq_profile()
-
         # get profile embeddings
         pro_emb_d1 = seq_pro(inputs2_d1)
         pro_emb_d2 = seq_pro(inputs2_d2)
 
         # concatenate xyt(v) and profile 
-        if nn_sim_flag:
-            cat = concatenate([temp_emb_d1]+[pro_emb_d1]+[temp_emb_d2]+[pro_emb_d2])
-        else:
-            rep1 = concatenate([temp_emb_d1]+[pro_emb_d1])
-            rep2 = concatenate([temp_emb_d2]+[pro_emb_d2])
+        cat = concatenate([trip_emb_d1]+[pro_emb_d1]+[trip_emb_d2]+[pro_emb_d2])
     else:
-        if nn_sim_flag:
-            cat = concatenate([temp_emb_d1]+[temp_emb_d2])
-        else:
-            rep1 = temp_emb_d1
-            rep2 = temp_emb_d2
+        cat = concatenate([trip_emb_d1]+[trip_emb_d2])
     # merge input and output
     inputs_tmp = inputs1_d1s+inputs1_d1d+inputs1_d2s+inputs1_d2d
     if with_profile:
         inputs_tmp.append(inputs2_d1)
         inputs_tmp.append(inputs2_d2)
         
-    # similarity nn or nn for learning xyt and profile together
-    if nn_sim_flag:
-        prediction = seq_sim(cat)
-    else:
-        L1_layer = Lambda(lambda tensors:K.abs(tensors[0] - tensors[1]))
-        #call this layer on list of two input tensors.
-        L1_distance = L1_layer([rep1, rep2])
-        prediction = Dense(1,activation='sigmoid')(L1_distance)
-
+    # similarity nn for learning xyt and profile together
+    prediction = seq_sim(cat)
+    
+    # training process
     siamese_net = Model(inputs=inputs_tmp,outputs=prediction)
     optimizer = Adam(0.00006)
     siamese_net.compile(loss="binary_crossentropy",optimizer=optimizer)
     return siamese_net
 
 
-# In[18]:
-
-
-def build_model_profileonly(nn_sim_flag):
+def build_model_profileonly():
     # define inputs
     inputs2_d1 = Input((11,)) 
     inputs2_d2 = Input((11,)) 
@@ -165,15 +136,8 @@ def build_model_profileonly(nn_sim_flag):
     # concatenate embeddings
     cat = concatenate([pro_emb_d1]+[pro_emb_d2])
     # get prediction
-    if nn_sim_flag:
-        # similarity nn or nn for learning xyt and profile together
-        prediction = seq_sim(cat)
-    else:
-        # l1 similarity
-        L1_layer = Lambda(lambda tensors:K.abs(tensors[0] - tensors[1]))
-        #call this layer on list of two input tensors.
-        L1_distance = L1_layer([pro_emb_d1, pro_emb_d2])
-        prediction = Dense(1,activation='sigmoid')(L1_distance)
+    # similarity nn for learning xyt and profile together
+    prediction = seq_sim(cat)
         
     siamese_net = Model(inputs=[inputs2_d1,inputs2_d2],outputs=prediction)
     optimizer = Adam(0.00006)
@@ -181,11 +145,7 @@ def build_model_profileonly(nn_sim_flag):
     
     return siamese_net
 
-
-# In[27]:
-
-
-def build_model_seekserve(with_speed,with_profile,with_temporal,nn_sim_flag):
+def build_model_seekserve(with_speed,with_profile):
     if with_speed: 
         inputs_d1 = [Input((None,4)) for _ in range(5)] 
         inputs_d2 = [Input((None,4)) for _ in range(5)] 
@@ -205,16 +165,8 @@ def build_model_seekserve(with_speed,with_profile,with_temporal,nn_sim_flag):
     lstm_d2 = [seq_lstm1(traj_input) for traj_input in inputs_d2]
     
     # get trip embeddings
-    emb_d1 = concatenate(lstm_d1)
-    emb_d2 = concatenate(lstm_d2)
-    
-    if with_temporal:
-        # get temporal embeddings
-        temp_emb_d1 = seq_repres(emb_d1)
-        temp_emb_d2 = seq_repres(emb_d2)
-    else:
-        temp_emb_d1 = emb_d1
-        temp_emb_d2 = emb_d2
+    temp_emb_d1 = concatenate(lstm_d1)
+    temp_emb_d2 = concatenate(lstm_d2)
     
     # one day one driver has one profiel features
     if with_profile:
@@ -223,40 +175,22 @@ def build_model_seekserve(with_speed,with_profile,with_temporal,nn_sim_flag):
         inputs2_d2 = Input((11,)) 
         # model profile features representation nn
         seq_pro = seq_profile()
-    
         # get profile embeddings
         pro_emb_d1 = seq_pro(inputs2_d1)
         pro_emb_d2 = seq_pro(inputs2_d2)
-
         # concatenate xyt(v) and profile 
-        if nn_sim_flag:
-            cat = concatenate([temp_emb_d1]+[pro_emb_d1]+[temp_emb_d2]+[pro_emb_d2])
-        else:
-            rep1 = concatenate([temp_emb_d1]+[pro_emb_d1])
-            rep2 = concatenate([temp_emb_d2]+[pro_emb_d2])
+        cat = concatenate([temp_emb_d1]+[pro_emb_d1]+[temp_emb_d2]+[pro_emb_d2])
     else:
-        if nn_sim_flag:
-            cat = concatenate([temp_emb_d1]+[temp_emb_d2])
-        else:
-            rep1 = temp_emb_d1
-            rep2 = temp_emb_d2
+        cat = concatenate([temp_emb_d1]+[temp_emb_d2])
     
     # merge input and output
     inputs_tmp = inputs_d1+inputs_d2
     if with_profile:
         inputs_tmp.append(inputs2_d1)
         inputs_tmp.append(inputs2_d2)
-    # prediction layer
-    if nn_sim_flag:
-        # similarity nn or nn for learning xyt and profile together
-        prediction = seq_sim(cat)
-    else:
-        # l1 similarity
-        #layer to merge two encoded inputs with the l1 distance between them
-        L1_layer = Lambda(lambda tensors:K.abs(tensors[0] - tensors[1]))
-        #call this layer on list of two input tensors.
-        L1_distance = L1_layer([rep1, rep2])
-        prediction = Dense(1,activation='sigmoid')(L1_distance)
+        
+    # similarity nn or nn for learning xyt and profile together
+    prediction = seq_sim(cat)
     
     siamese_net = Model(inputs=inputs_tmp,outputs=prediction)
     optimizer = Adam(0.00006)
