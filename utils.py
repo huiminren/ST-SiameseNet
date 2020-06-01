@@ -8,10 +8,12 @@ import pickle
 import random
 import numpy as np
 
-
-# In[2]:
-
-
+def create_dir(directory):
+    """Creates a directory if it does not already exist.
+    """
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        
 def load_data(path,filename):
     '''
     Args:
@@ -27,10 +29,6 @@ def load_data(path,filename):
     file.close() 
     return data
 
-
-# In[3]:
-
-
 def expand(data):
     '''
     Expand dimension for data
@@ -38,10 +36,6 @@ def expand(data):
     '''
     data = np.expand_dims(data, axis=0)
     return data 
-
-
-# In[4]:
-
 
 def get_days(ispos = True, num_days = 5,new_days = False):
     '''
@@ -82,10 +76,6 @@ def get_days(ispos = True, num_days = 5,new_days = False):
                 neg_rnd_days.extend(random.sample(range(num_days,10),1)) #  randomly pick up 1 day twice from the rest days(new). 
             return neg_rnd_days
 
-
-# In[5]:
-
-
 def get_trajs(data, rnd_plt, rnd_day, input_type):
     '''
     Args:
@@ -103,10 +93,6 @@ def get_trajs(data, rnd_plt, rnd_day, input_type):
     # randomly select 5 trajectories for each day
     trajs = random.sample(trajs,5)
     return trajs
-
-
-# In[6]:
-
 
 def merge_data(t,d1_profile,d2_profile):
     """
@@ -126,11 +112,6 @@ def merge_data(t,d1_profile,d2_profile):
     inputs = [expand(data) for data in inputs]
     return inputs
     
-
-
-# In[58]:
-
-
 def get_pairs_s_or_d(data, profile_data, plates, input_type, num_days = 5, new_days = False):
     '''
     Get input pairs and label, batch_size = 1
@@ -183,7 +164,6 @@ def get_pairs_s_or_d(data, profile_data, plates, input_type, num_days = 5, new_d
             inputs_pos = [expand(data) for data in np.array(t_pos)]
             
         return inputs_pos,[0]
-            
     
     else:
         # negative pair
@@ -203,10 +183,6 @@ def get_pairs_s_or_d(data, profile_data, plates, input_type, num_days = 5, new_d
             inputs_neg = [expand(data) for data in np.array(t_neg)]
             
         return inputs_neg,[1]
-
-
-# In[59]:
-
 
 def get_pairs_s_and_d(data, profile_data, plates, input_type='', num_days = 5, new_days = False):
     '''
@@ -298,7 +274,6 @@ def get_pairs_s_and_d(data, profile_data, plates, input_type='', num_days = 5, n
             
         return inputs_neg,[1]
 
-
 def save_model(net, model_path, tag):
     # serialize model to JSON
     model_json = net.to_json()
@@ -307,7 +282,6 @@ def save_model(net, model_path, tag):
     # serialize weights to HDF5
     net.save_weights(model_path+"model_{0}.h5".format(tag))
     print("Saved model to disk")
-
 
 def acc(net, pairs, labels):
     '''
