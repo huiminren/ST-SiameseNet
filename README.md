@@ -13,16 +13,14 @@ Source code of the paper: ST-SiameseNet: Spatio-Temporal Siamese Networks for Hu
 
 ## Usage
 ### Installation
-* Clone this repo:
+#### Clone this repo:
 ```bash
 git clone https://github.com/huiminren/ST-SiameseNet.git
 cd ST-SiameseNet
 ```
-* Install Keras 2.0</p>
+#### Install Packages
 For pip users, please type the command `pip install -r requirements.txt`.
-  
-* Dataset</p>
-  We provide 500 drivers as sample data. If you need full dataset, please feel free to contact us.
-
-* Running</p>
+#### Dataset
+We provide 500 drivers as sample data. If you need full dataset, please feel free to contact us.
+#### Running
   `python main.py`
