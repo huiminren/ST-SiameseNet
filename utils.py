@@ -3,6 +3,7 @@
 
 import pickle
 import random
+import os
 import numpy as np
 
 def create_dir(directory):

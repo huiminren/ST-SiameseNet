@@ -32,8 +32,8 @@ def create_parser():
     
     # saving and loading directoreis
     parser.add_argument('--data_path', type=str, default='./dataset/')
-    parser.add_argument('--log_path', type=str, default='log')
-    parser.add_argument('--model_path', type=str, default='models')
+    parser.add_argument('--log_path', type=str, default='./log/')
+    parser.add_argument('--model_path', type=str, default='./models/')
     parser.add_argument('--log_step', type=int , default=1000)
     parser.add_argument('--checkpoint_every', type=int , default=50000)
     
@@ -45,6 +45,7 @@ def main(opts):
     """
     create_dir(opts.log_path)
     create_dir(opts.model_path)
+    model_path = opts.model_path
 
     # prepare logging file
     tag = str(opts.num_train_plates)+'plates_'+'days'+str(opts.num_days)+\
@@ -52,11 +53,12 @@ def main(opts):
     print(tag)
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(levelname)s %(message)s',
-                        filename=log_path+tag+'.log',
+                        filename=opts.log_path+tag+'.log',
                         filemode='a')
 
     # load data
     all_plates = load_data(opts.data_path,'plates.pkl')
+    all_plates.remove('d1329')
     train_plates = all_plates[:opts.num_train_plates]
     test_plates = all_plates[2000:] # 197 plates which are unseen
 
@@ -66,17 +68,17 @@ def main(opts):
         input_type = opts.input_type
         
     if opts.with_speed:
-        raw_trajs = load_data(opts.data_path,'trajs_with_speed.pkl')
+        raw_trajs = load_data(opts.data_path,'trajs_with_speed500.pkl')
     else:
-        raw_trajs = load_data(opts.data_path,'trajs_without_speed.pkl')
+        raw_trajs = load_data(opts.data_path,'trajs_without_speed500.pkl')
         
     if opts.with_profile:
-        profile_data = load_data(opts.data_path,'profile_features.pkl')
+        profile_data = load_data(opts.data_path,'profile_features500.pkl')
     else:
         profile_data = []
 
     # prepare model and input data
-    if (input_type == '') and (with_speed == False) and (with_profile==True):
+    if (input_type == '') and (opts.with_speed == False) and (opts.with_profile==True):
         # profile is True and speed is False --> profile only (no xyt)
         siamese_net = build_model_profileonly()
         get_pairs = get_pairs_s_and_d
@@ -85,11 +87,11 @@ def main(opts):
         # both speed and profile are True --> xyt+v+profile
         # both speed and profile are False --> xyt
         # speed is True and profie is False --> xyt+v
-        siamese_net = build_model_best(with_speed,with_profile)
+        siamese_net = build_model_best(opts.with_speed,opts.with_profile)
         get_pairs = get_pairs_s_and_d
     elif input_type != '':
         # when input_type != '' --> seek or drive 
-        siamese_net = build_model_seekserve(with_speed,with_profile)
+        siamese_net = build_model_seekserve(opts.with_speed,opts.with_profile)
         get_pairs = get_pairs_s_or_d
 
     # start training 
@@ -111,15 +113,15 @@ def main(opts):
     val_pairs,val_labels = [],[]
     test_pairs,test_labels = [],[] 
     for _ in range(1000):
-        pv,lv = get_pairs(raw_trajs, profile_data, train_plates, input_type, num_days,new_days = True)
+        pv,lv = get_pairs(raw_trajs, profile_data, train_plates, input_type, opts.num_days,new_days = True)
         val_pairs.append(pv) 
         val_labels.append(lv)
-        pt,lt = get_pairs(raw_trajs, profile_data, test_plates, input_type, num_days,new_days = True)
+        pt,lt = get_pairs(raw_trajs, profile_data, test_plates, input_type, opts.num_days,new_days = True)
         test_pairs.append(pt) 
         test_labels.append(lt)
 
     for ite in range(iteration):
-        pair,label = get_pairs(raw_trajs, profile_data, train_plates, input_type, num_days)
+        pair,label = get_pairs(raw_trajs, profile_data, train_plates, input_type, opts.num_days)
         loss = siamese_net.train_on_batch(pair,label)
         pairs.append(pair)
         labels.append(label)
