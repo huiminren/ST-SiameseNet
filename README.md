@@ -5,7 +5,7 @@
 </p>
 
 ## About
-Source code of the paper: ST-SiameseNet: Spatio-Temporal Siamese Networks for Human Mobility Signature Identification
+Source code of the paper: [ST-SiameseNet: Spatio-Temporal Siamese Networks for Human Mobility Signature Identification](https://dl.acm.org/doi/pdf/10.1145/3394486.3403183)
 ## Requirements
 * Python >= 3.6
 * `tensorflow >= 2.0.0`
@@ -24,3 +24,15 @@ For pip users, please type the command `pip install -r requirements.txt`.
 We provide 500 drivers as sample data. If you need full dataset, please feel free to contact us.
 #### Running
   `python main.py`
+
+## Citation
+If you find this repo useful and would like to cite it, citing our paper as the following will be really appropriate: <br>
+```
+@inproceedings{ren2020st,
+  title={ST-SiameseNet: Spatio-Temporal Siamese Networks for Human Mobility Signature Identification},
+  author={Ren, Huimin and Pan, Menghai and Li, Yanhua and Zhou, Xun and Luo, Jun},
+  booktitle={Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining},
+  pages={1306--1315},
+  year={2020}
+}
+```
