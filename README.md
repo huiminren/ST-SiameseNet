@@ -21,7 +21,7 @@ cd ST-SiameseNet
 #### Install Packages
 For pip users, please type the command `pip install -r requirements.txt`.
 #### Dataset
-We provide 500 drivers as sample data. If you need full dataset, please feel free to contact us.
+We provide 500 drivers as sample data.
 #### Running
   `python main.py`
 
