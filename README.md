@@ -7,9 +7,9 @@
 ## About
 Source code of the paper: [ST-SiameseNet: Spatio-Temporal Siamese Networks for Human Mobility Signature Identification](https://dl.acm.org/doi/pdf/10.1145/3394486.3403183)
 ## Requirements
-* Python >= 3.6
-* `tensorflow >= 2.0.0`
-* `keras >= 2.0.0`
+* Python = 3.6
+* `tensorflow = 2.0.0`
+* `keras = 2.0.0`
 
 ## Usage
 ### Installation
